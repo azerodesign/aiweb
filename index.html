@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 min-h-screen">
+    
+    <div id="app" class="flex flex-col h-screen max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="bg-gray-800/50 backdrop-blur-lg border-b border-purple-500/30 p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="text-3xl" id="providerIcon">⚡</div>
+                    <div>
+                        <h1 class="text-xl font-bold text-white">AI Assistant</h1>
+                        <p class="text-xs text-gray-400" id="providerName">Groq</p>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="toggleTheme()" class="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition">
+                        <span id="themeIcon">☀️</span>
+                    </button>
+                    <button onclick="toggleSettings()" class="p-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition">
+                        ⚙️
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div id="chatArea" class="flex-1 overflow-y-auto p-4 space-y-4">
+            <div class="flex justify-start">
+                <div class="max-w-[80%] rounded-2xl px-6 py-4 bg-gray-800/80 text-gray-100 border border-purple-500/30 shadow-lg">
+                    <p>Halo! 👋 Pilih provider AI di Settings untuk memulai chat!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="bg-gray-800/50 backdrop-blur-lg border-t border-purple-500/30 p-4">
+            <div class="flex gap-3">
+                <input 
+                    type="text" 
+                    id="messageInput" 
+                    placeholder="Ketik pesan..."
+                    class="flex-1 px-6 py-4 rounded-xl bg-gray-700 text-white placeholder-gray-400 border-2 border-gray-600 focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                    onkeypress="handleKeyPress(event)"
+                />
+                <button 
+                    onclick="sendMessage()" 
+                    id="sendBtn"
+                    class="px-6 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg transform hover:scale-105 transition">
+                    ➤
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h2 class="text-xl font-bold mb-4 text-white">⚙️ Settings</h2>
+            
+            <label class="block text-sm font-medium mb-2 text-gray-300">AI Provider</label>
+            <div class="grid grid-cols-3 gap-2 mb-4">
+                <button onclick="selectProvider('groq')" class="provider-btn p-3 rounded-lg border-2 border-purple-500 bg-purple-500/20 text-white" data-provider="groq">
+                    <div class="text-2xl">⚡</div>
+                    <div class="text-xs mt-1">Groq</div>
+                </button>
+                <button onclick="selectProvider('openai')" class="provider-btn p-3 rounded-lg border-2 border-gray-600 bg-gray-700 text-gray-300" data-provider="openai">
+                    <div class="text-2xl">🤖</div>
+                    <div class="text-xs mt-1">OpenAI</div>
+                </button>
+                <button onclick="selectProvider('gemini')" class="provider-btn p-3 rounded-lg border-2 border-gray-600 bg-gray-700 text-gray-300" data-provider="gemini">
+                    <div class="text-2xl">💎</div>
+                    <div class="text-xs mt-1">Gemini</div>
+                </button>
+                <button onclick="selectProvider('deepseek')" class="provider-btn p-3 rounded-lg border-2 border-gray-600 bg-gray-700 text-gray-300" data-provider="deepseek">
+                    <div class="text-2xl">🧠</div>
+                    <div class="text-xs mt-1">DeepSeek</div>
+                </button>
+                <button onclick="selectProvider('anthropic')" class="provider-btn p-3 rounded-lg border-2 border-gray-600 bg-gray-700 text-gray-300" data-provider="anthropic">
+                    <div class="text-2xl">🎭</div>
+                    <div class="text-xs mt-1">Anthropic</div>
+                </button>
+            </div>
+
+            <label class="block text-sm font-medium mb-2 text-gray-300">API Key</label>
+            <input 
+                type="password" 
+                id="apiKeyInput" 
+                placeholder="Masukkan API Key"
+                class="w-full px-4 py-3 rounded-lg mb-4 bg-gray-700 text-white border-gray-600 border focus:ring-2 focus:ring-purple-500 focus:outline-none"
+            />
+
+            <label class="block text-sm font-medium mb-2 text-gray-300">Model</label>
+            <select id="modelSelect" class="w-full px-4 py-3 rounded-lg mb-4 bg-gray-700 text-white border-gray-600 border focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
+            </select>
+
+            <div class="p-3 rounded-lg mb-4 text-xs bg-gray-700/50 text-gray-400">
+                <strong>📍 Dapatkan API Key:</strong>
+                <ul class="mt-2 space-y-1">
+                    <li>• Groq: <a href="https://console.groq.com" target="_blank" class="text-purple-400 hover:underline">console.groq.com</a></li>
+                    <li>• OpenAI: <a href="https://platform.openai.com" target="_blank" class="text-purple-400 hover:underline">platform.openai.com</a></li>
+                    <li>• Gemini: <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-purple-400 hover:underline">aistudio.google.com</a></li>
+                    <li>• DeepSeek: <a href="https://platform.deepseek.com" target="_blank" class="text-purple-400 hover:underline">platform.deepseek.com</a></li>
+                    <li>• Anthropic: <a href="https://console.anthropic.com" target="_blank" class="text-purple-400 hover:underline">console.anthropic.com</a></li>
+                </ul>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="toggleSettings()" class="flex-1 px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition">Batal</button>
+                <button onclick="saveSettings()" class="flex-1 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition font-medium">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let config = {
+            apiKey: '',
+            provider: 'groq',
+            model: 'llama-3.3-70b-versatile',
+            darkMode: true
+        };
+
+        const providers = {
+            groq: {
+                name: 'Groq',
+                icon: '⚡',
+                endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+                models: [
+                    { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B' },
+                    { id: 'llama-3.1-70b-versatile', name: 'Llama 3.1 70B' },
+                    { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B' },
+                    { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B' }
+                ]
+            },
+            openai: {
+                name: 'OpenAI',
+                icon: '🤖',
+                endpoint: 'https://api.openai.com/v1/chat/completions',
+                models: [
+                    { id: 'gpt-4o', name: 'GPT-4 Omni' },
+                    { id: 'gpt-4o-mini', name: 'GPT-4 Omni Mini' },
+                    { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' }
+                ]
+            },
+            gemini: {
+                name: 'Google Gemini',
+                icon: '💎',
+                endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/',
+                isGemini: true,
+                models: [
+                    { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash' },
+                    { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro' },
+                    { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash' }
+                ]
+            },
+            deepseek: {
+                name: 'DeepSeek',
+                icon: '🧠',
+                endpoint: 'https://api.deepseek.com/chat/completions',
+                models: [
+                    { id: 'deepseek-chat', name: 'DeepSeek Chat' },
+                    { id: 'deepseek-coder', name: 'DeepSeek Coder' }
+                ]
+            },
+            anthropic: {
+                name: 'Anthropic',
+                icon: '🎭',
+                endpoint: 'https://api.anthropic.com/v1/messages',
+                isAnthropic: true,
+                models: [
+                    { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4' },
+                    { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet' }
+                ]
+            }
+        };
+
+        let messages = [];
+
+        function toggleSettings() {
+            const modal = document.getElementById('settingsModal');
+            modal.classList.toggle('hidden');
+        }
+
+        function toggleTheme() {
+            config.darkMode = !config.darkMode;
+            document.getElementById('themeIcon').textContent = config.darkMode ? '☀️' : '🌙';
+        }
+
+        function selectProvider(providerName) {
+            config.provider = providerName;
+            const prov = providers[providerName];
+            config.model = prov.models[0].id;
+            
+            document.getElementById('providerIcon').textContent = prov.icon;
+            document.getElementById('providerName').textContent = prov.name;
+            
+            // Update model select
+            const modelSelect = document.getElementById('modelSelect');
+            modelSelect.innerHTML = '';
+            prov.models.forEach(m => {
+                const option = document.createElement('option');
+                option.value = m.id;
+                option.textContent = m.name;
+                modelSelect.appendChild(option);
+            });
+            
+            // Update button styles
+            document.querySelectorAll('.provider-btn').forEach(btn => {
+                if (btn.dataset.provider === providerName) {
+                    btn.className = 'provider-btn p-3 rounded-lg border-2 border-purple-500 bg-purple-500/20 text-white';
+                } else {
+                    btn.className = 'provider-btn p-3 rounded-lg border-2 border-gray-600 bg-gray-700 text-gray-300';
+                }
+            });
+        }
+
+        function saveSettings() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            if (!apiKey) {
+                alert('⚠️ API Key tidak boleh kosong!');
+                return;
+            }
+            config.apiKey = apiKey;
+            config.model = document.getElementById('modelSelect').value;
+            toggleSettings();
+            alert('✅ Pengaturan berhasil disimpan!');
+        }
+
+        function addMessage(role, content) {
+            messages.push({ role, content });
+            const chatArea = document.getElementById('chatArea');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+            msgDiv.innerHTML = `
+                <div class="max-w-[80%] rounded-2xl px-6 py-4 ${
+                    role === 'user' 
+                        ? 'bg-purple-600 text-white' 
+                        : 'bg-gray-800/80 text-gray-100 border border-purple-500/30'
+                } shadow-lg">
+                    <p class="whitespace-pre-wrap">${content}</p>
+                </div>
+            `;
+            chatArea.appendChild(msgDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function showLoading() {
+            const chatArea = document.getElementById('chatArea');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loading';
+            loadingDiv.className = 'flex justify-start';
+            loadingDiv.innerHTML = `
+                <div class="rounded-2xl px-6 py-4 bg-gray-800/80 border border-purple-500/30 shadow-lg">
+                    <div class="flex gap-2">
+                        <div class="w-2 h-2 rounded-full bg-purple-400 animate-bounce"></div>
+                        <div class="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style="animation-delay: 0.1s"></div>
+                        <div class="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style="animation-delay: 0.2s"></div>
+                    </div>
+                </div>
+            `;
+            chatArea.appendChild(loadingDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function hideLoading() {
+            const loading = document.getElementById('loading');
+            if (loading) loading.remove();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            if (!config.apiKey) {
+                alert('⚠️ Masukkan API Key di Settings terlebih dahulu!');
+                toggleSettings();
+                return;
+            }
+
+            input.value = '';
+            addMessage('user', message);
+            showLoading();
+
+            try {
+                const prov = providers[config.provider];
+                let response;
+
+                if (prov.isGemini) {
+                    response = await fetch(`${prov.endpoint}${config.model}:generateContent?key=${config.apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: message }] }]
+                        })
+                    });
+                    const data = await response.json();
+                    hideLoading();
+                    if (data.candidates && data.candidates[0]) {
+                        addMessage('assistant', data.candidates[0].content.parts[0].text);
+                    } else {
+                        throw new Error(data.error?.message || 'Gemini error');
+                    }
+                } else if (prov.isAnthropic) {
+                    response = await fetch(prov.endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-key': config.apiKey,
+                            'anthropic-version': '2023-06-01'
+                        },
+                        body: JSON.stringify({
+                            model: config.model,
+                            max_tokens: 1024,
+                            messages: [{ role: 'user', content: message }]
+                        })
+                    });
+                    const data = await response.json();
+                    hideLoading();
+                    if (data.content && data.content[0]) {
+                        addMessage('assistant', data.content[0].text);
+                    } else {
+                        throw new Error(data.error?.message || 'Anthropic error');
+                    }
+                } else {
+                    response = await fetch(prov.endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${config.apiKey}`
+                        },
+                        body: JSON.stringify({
+                            model: config.model,
+                            messages: [{ role: 'user', content: message }],
+                            temperature: 0.7,
+                            max_tokens: 1024
+                        })
+                    });
+                    const data = await response.json();
+                    hideLoading();
+                    if (data.choices && data.choices[0]) {
+                        addMessage('assistant', data.choices[0].message.content);
+                    } else {
+                        throw new Error(data.error?.message || 'API error');
+                    }
+                }
+            } catch (error) {
+                hideLoading();
+                addMessage('assistant', `❌ Error: ${error.message}`);
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>
